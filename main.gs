@@ -4,6 +4,9 @@
 function main(){
   // チケットのデータを取得
   const tidyArray = getDetailsByWaitList();
+  if(tidyArray === undefined){
+    return;
+  }
   // チケット１つずつ処理
   for(i=0;i<tidyArray.length;i++){
     const inputObject = tidyArray[i];

@@ -35,6 +35,10 @@ function getDetailsByWaitList(){
   const waitListSheet = spreadSheet.getSheetByName("契約書作成");
   const waitList = waitListSheet.getRange(2,1,waitListSheet.getLastRow()-1,1).getValues().flat();
   const checkBoxList = waitListSheet.getRange(2,4,waitListSheet.getLastRow()-1,1).getValues().flat();
+  if(!checkBoxList.includes(true)){
+    Browser.msgBox("チェックボックスが選択されていません。");
+    return;
+  }
   let idList = [];
   for(i=0;i<waitList.length;i++){
     if(checkBoxList[i] === true){

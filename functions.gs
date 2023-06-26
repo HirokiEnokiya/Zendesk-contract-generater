@@ -11,7 +11,6 @@ function makeContract(object) {
   // 条件分岐からテンプレートを選択
 
   const srcDoc = selectTemplate(object);
-  // const folder = selectFolder(senderEmail);
   const folder = DriveApp.getFolderById("1_ntJpHl91XbrV3VSPAi6P6IRFB9L2ZSq");
   const fileName = createFileName(object,today);
   const replacedDoc   = srcDoc.makeCopy(fileName, folder);
@@ -28,14 +27,14 @@ function makeContract(object) {
 // 複製したファイルをゴミ箱へ移動
   replacedDoc.setTrashed(true);
 
-// // 回答者にフォルダーの編集権限を付与
-//   drivePermissionInsert(senderEmail,folder.getId());
+// 権限の設定(リンクから誰でも閲覧可)
+  const access = DriveApp.Access.ANYONE_WITH_LINK;
+  const permission = DriveApp.Permission.VIEW;
+  contract.setSharing(access,permission);
 
   const ticketId = object["ticketId"];
-  console.log(ticketId);
 
-  // addPrivateTicketComment(ticketId,`{"body:${contract.getUrl()}}`);
-  addPrivateTicketComment(ticketId,contract.getUrl());
+  addPrivateTicketComment(ticketId,`契約書が作成されました。\n${contract.getUrl()}`);
   console.log(contract.getUrl());
 }
 
@@ -61,32 +60,35 @@ function selectTemplate(inputObject) {
 
   const branchsArray = getBranchDataArray();
   let templateId;
+  // 条件数が多いものを優先させるためのカウンタ
+  let lastBranchFieldRequirementsNumber=0;
 
   // 条件分岐を1つずつ検証
   for(i=0;i<branchsArray.length;i++){
+    console.log("lastBranchFieldRequirementsNumber:"+lastBranchFieldRequirementsNumber);
     const branchObject = branchsArray[i];
+    const fieldBranches = branchObject.fieldBranches;
     // フォームでの分岐
-    if(inputObject['ticketFormId'] === branchObject['ticketFormId']){
-      console.log("フォームが合致");
-      const fieldBranches = branchObject.fieldBranches;
-      console.log(fieldBranches);
+    if(inputObject['ticketFormId'] === branchObject['ticketFormId'] && Object.keys(fieldBranches).length >= lastBranchFieldRequirementsNumber){
+      // 一致した条件を数えるカウンタ
       let counter = 0;
       for(id in fieldBranches){
-        console.log(inputObject[id]);
-        console.log(fieldBranches[id]);
         if(inputObject[id] === fieldBranches[id] || id === ""){counter++}
-        console.log(counter);
       }
       if(counter === Object.keys(fieldBranches).length){
+        if(counter === lastBranchFieldRequirementsNumber  &&lastBranchFieldRequirementsNumber !== 0){
+          Browser.msgBox("該当するテンプレートが複数存在します。条件分岐の設定を修正してください。");
+          return;
+        }
         // 条件クリア
         templateId = branchObject['templateId'];
+        lastBranchFieldRequirementsNumber = Object.keys(fieldBranches).length;
       }
     }
   }
 
   try{
     const templateFile = DriveApp.getFileById(templateId);
-    console.log(templateFile.getName());
     return templateFile;
   }catch(e){
     console.log("適切なテンプレートが設定されていません。");
@@ -96,11 +98,14 @@ function selectTemplate(inputObject) {
 
 /**
  * スプレッドシートの条件分岐のデータをオブジェクトにして、それを格納した配列を返す関数
+ * @returns branchsArray {Array} 各条件分岐をオブジェクトにしたものを格納した配列
+ * @examples [{テンプレートID:XXX,フォームID:XXX,{フィールドid:回答,フィールドid:回答}},{},{},...]
  */
 function getBranchDataArray(){
   const spreadSheet = SpreadsheetApp.getActiveSpreadsheet();
   const branchSheet = spreadSheet.getSheetByName("BranchDB");
   const tableValues = branchSheet.getRange(2,1,branchSheet.getLastRow()-1,12).getValues();
+  console.log(tableValues);
 
   let branchsArray = [];
 
