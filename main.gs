@@ -8,9 +8,13 @@ function main(){
     return;
   }
   // チケット１つずつ処理
-  for(i=0;i<tidyArray.length;i++){
-    const inputObject = tidyArray[i];
-    makeContract(inputObject);
+  try{
+    for(i=0;i<tidyArray.length;i++){
+      const inputObject = tidyArray[i];
+      makeContract(inputObject);
+    }
+  }catch(e){
+    return;
   }
   Browser.msgBox("契約書のリンクをチケットコメントとして追加しました。");
 }

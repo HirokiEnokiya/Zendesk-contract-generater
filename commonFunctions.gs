@@ -3,6 +3,7 @@
  * @param {String} method GET,POST,PUT
  * @param {String} endpoint "~api/v2"以降の文字列
  * @param {String} data -dオプションの中身
+ * @returns {Object} jsonData
  */
 function callZendeskApiV2(method,endpoint,data){
   const API_TOKEN = PropertiesService.getScriptProperties().getProperty("API_TOKEN");
@@ -24,7 +25,7 @@ function callZendeskApiV2(method,endpoint,data){
     const response = UrlFetchApp.fetch(url ,options);
     const json = response.getContentText();
     const jsonData = JSON.parse(json)
-    // console.log(jsonData);
+    console.log(jsonData);
     return jsonData;
   }catch(e){
     Logger.log("Error:"+e);
