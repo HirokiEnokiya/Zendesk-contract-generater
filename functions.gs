@@ -157,7 +157,7 @@ function replaceTextDoc(targetDocId,answers,today) {
 // ドキュメント内のプレースホルダーを置換
     for(const key in answers){
       if(answers[key] !== null){
-        const regex = new RegExp(`(#.*)?(\\s)*{${key}}`);
+        const regex = new RegExp(`(#.*)?(\\s)*\\{${key}\\}`);
         targetDocBody.replaceText(regex,answers[key]);   
       }
     }

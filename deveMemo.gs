@@ -1,10 +1,10 @@
 function myFunction() {
 
-  const key = "aiueo"
+  const key = "13729524994457"
   // const string = "{aiueo#これは注釈です}"
-  const array = ["#これは注釈です{aiueo}","これは注釈です{aiueo}","#これは注釈です{aeo}","{aiueo}"];
+  const array = ["#姓{13729524994457}","これは注釈です{aiueo}","#これは注釈です{aeo}","{aiueo}"];
   for(string of array){
-    const regex = new RegExp(`(#.*)?(\\s)*{${key}}`);
+    const regex = new RegExp(`(#.*)?(\\s)*\\{${key}\\}`);
     const result = string.replace(regex,"answers[key]");
     console.log(result);
   }
