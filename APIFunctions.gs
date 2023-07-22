@@ -26,6 +26,16 @@ function getFormIdByTicketId(ticketId) {
 }
 
 /**
+ * ticketIdを指定してチケットフォームの詳細データを取ってくる関数
+ * @param {Number} ticketFormId
+ * @return {Object} jsondata
+ */
+function getDataByTicketFormId(ticketFormId){
+  const jsonData = callZendeskApiV2("GET",`ticket_forms/${ticketFormId}.json`,null);
+  return jsonData;
+}
+
+/**
  * waitListでチェックボックスが付けられたidのチケットについて詳細データを取ってきて成形したオブジェクトを返す関数
  * @returns {Array} outputArray 成形したオブジェクトを格納した配列
  * @example [{チケット1のデータ},{チケット2のデータ},...]
@@ -34,7 +44,7 @@ function getDetailsByWaitList(){
   const spreadSheet = SpreadsheetApp.getActiveSpreadsheet();
   const waitListSheet = spreadSheet.getSheetByName("契約書作成");
   const waitList = waitListSheet.getRange(2,1,waitListSheet.getLastRow()-1,1).getValues().flat();
-  const checkBoxList = waitListSheet.getRange(2,4,waitListSheet.getLastRow()-1,1).getValues().flat();
+  const checkBoxList = waitListSheet.getRange(2,5,waitListSheet.getLastRow()-1,1).getValues().flat();
   if(!checkBoxList.includes(true)){
     Browser.msgBox("チェックボックスが選択されていません。");
     return;
@@ -43,7 +53,7 @@ function getDetailsByWaitList(){
   for(i=0;i<waitList.length;i++){
     if(checkBoxList[i] === true){
       idList.push(waitList[i]);
-      waitListSheet.getRange(i+2,4).setValue(false);
+      waitListSheet.getRange(i+2,5).setValue(false);
     }
   }
   const jsonData = callZendeskApiV2("GET",`tickets/show_many?ids=${idList.join(",")}`);

@@ -9,13 +9,18 @@ function makeContract(object) {
   const today = formatTimestamp(new Date());
 
   // 条件分岐からテンプレートを選択
-
-  const srcDoc = selectTemplate(object);
+  let srcDoc;
+  try{
+    srcDoc = selectTemplate(object);
+  }catch(e){
+    Browser.msgBox("適切なテンプレートが設定されていません。");
+    throw new Error("適切なテンプレートが設定されていません。");
+    return;
+  }
   const folder = DriveApp.getFolderById("1_ntJpHl91XbrV3VSPAi6P6IRFB9L2ZSq");
   const fileName = createFileName(object,today);
   const replacedDoc   = srcDoc.makeCopy(fileName, folder);
   const replacedDocId = replacedDoc.getId();
-  console.log(replacedDocId);
 
 // ドキュメント内のプレースホルダーを置換
   replaceTextDoc(replacedDocId,object,today);
@@ -35,7 +40,6 @@ function makeContract(object) {
   const ticketId = object["ticketId"];
 
   addPrivateTicketComment(ticketId,`契約書が作成されました。\n${contract.getUrl()}`);
-  console.log(contract.getUrl());
 }
 
 /** 
@@ -65,7 +69,6 @@ function selectTemplate(inputObject) {
 
   // 条件分岐を1つずつ検証
   for(i=0;i<branchsArray.length;i++){
-    console.log("lastBranchFieldRequirementsNumber:"+lastBranchFieldRequirementsNumber);
     const branchObject = branchsArray[i];
     const fieldBranches = branchObject.fieldBranches;
     // フォームでの分岐
@@ -87,13 +90,8 @@ function selectTemplate(inputObject) {
     }
   }
 
-  try{
-    const templateFile = DriveApp.getFileById(templateId);
-    return templateFile;
-  }catch(e){
-    console.log("適切なテンプレートが設定されていません。");
-    return;
-  }
+  const templateFile = DriveApp.getFileById(templateId);
+  return templateFile;
 }
 
 /**
@@ -105,7 +103,6 @@ function getBranchDataArray(){
   const spreadSheet = SpreadsheetApp.getActiveSpreadsheet();
   const branchSheet = spreadSheet.getSheetByName("BranchDB");
   const tableValues = branchSheet.getRange(2,1,branchSheet.getLastRow()-1,12).getValues();
-  console.log(tableValues);
 
   let branchsArray = [];
 
@@ -121,7 +118,6 @@ function getBranchDataArray(){
       }
     }
     delete branchObj.fieldBranches[""];
-    console.log(branchObj);
     branchsArray.push(branchObj);
   }
 
@@ -150,17 +146,22 @@ function replaceTextDoc(targetDocId,answers,today) {
   console.log(answers);
   try {
     const targetDoc = DocumentApp.openById(targetDocId);
-    console.log(targetDoc.getName());
     const targetDocBody = targetDoc.getBody();
     targetDocBody.replaceText(`{タイムスタンプ}`, today);
 // ドキュメント内のプレースホルダーを置換
     for(const key in answers){
       if(answers[key] !== null){
-        targetDocBody.replaceText(`{${key}}`,answers[key]);   
+        const regex = new RegExp(`(#[^{}]*)?(\\s)*\\{${key}\\}`);
+        targetDocBody.replaceText(regex.source,answers[key]);
+
+        // console.log(regex);
+        // console.log(regex.exec(targetDocBody.getText()));
+        // console.log(key+":"+answers[key]);
       }
     }
 
-    targetDocBody.replaceText('{.*?}','');
+    // // 残ったプレースホルダーを削除
+    // targetDocBody.replaceText(`(#.*)?(\\s)*\\{.*?\\}`,'');
 
     //置換したドキュメントを保存
     targetDoc.saveAndClose();
